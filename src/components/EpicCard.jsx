@@ -88,6 +88,7 @@ const EpicCard = ({ epic, onRefine, onGenerateIssues, onAddIssue, onUpdateEpic, 
 
   const getPriorityColor = (priority) => {
     switch (priority) {
+      case 'Critical': return 'text-red-800 font-bold';
       case 'High': return 'text-red-600';
       case 'Medium': return 'text-yellow-600';
       case 'Low': return 'text-green-600';
@@ -211,6 +212,7 @@ const EpicCard = ({ epic, onRefine, onGenerateIssues, onAddIssue, onUpdateEpic, 
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
                     <option value="High">High</option>
+                    <option value="Critical">Critical</option>
                   </select>
                 </div>
                 <div className="flex-1">

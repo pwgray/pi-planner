@@ -200,7 +200,7 @@ const App = () => {
   useEffect(() => {
     const initializeGenAI = async () => {
       try {
-        const apiKey = 'AIzaSyBuWt_hqwvGieG0sL8oYMqBzadob8a7KvY';
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
         if (!apiKey) {
           throw new Error('Gemini API key is not configured');
         }
@@ -597,7 +597,18 @@ const App = () => {
     const { teamVelocity } = config;
     const availableSprints = [...state.sprints];
     const scheduledIssues = [];
-    const unscheduledIssues = [...issues];
+    
+    // Sort issues by epic priority: Critical > High > Medium > Low
+    const priorityOrder = { 'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3 };
+    const sortedIssues = [...issues].sort((a, b) => {
+      const epicA = state.epics.find(epic => epic.id === a.epicId);
+      const epicB = state.epics.find(epic => epic.id === b.epicId);
+      const priorityA = priorityOrder[epicA?.priority || 'Medium'];
+      const priorityB = priorityOrder[epicB?.priority || 'Medium'];
+      return priorityA - priorityB;
+    });
+    
+    const unscheduledIssues = [...sortedIssues];
     
     // Track current sprint capacity
     let currentSprintIndex = 0;
@@ -611,14 +622,17 @@ const App = () => {
       };
     };
 
-    // Topological sort based on dependencies
+    // Topological sort based on dependencies, prioritizing by epic priority
     const getNextAvailableIssue = () => {
-      return unscheduledIssues.find(issue => {
+      const availableIssues = unscheduledIssues.filter(issue => {
         const issueDeps = dependencies[issue.id] || [];
         return issueDeps.every(depId => 
           scheduledIssues.some(scheduled => scheduled.id === depId)
         );
       });
+      
+      // Return the highest priority available issue (already sorted by priority)
+      return availableIssues[0];
     };
 
     while (unscheduledIssues.length > 0) {
