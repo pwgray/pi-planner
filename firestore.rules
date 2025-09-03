@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Debug function to log auth state
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Allow read/write access to planning data
+    match /projects/{appId}/planning/{document} {
+      allow read: if true;  // Allow all reads during development
+      allow write: if true; // Allow all writes during development
+    }
+
+    // Allow read/write access to all documents during development
+    match /{document=**} {
+      allow read, write: if true;
+  
+    }
+  }
+}
