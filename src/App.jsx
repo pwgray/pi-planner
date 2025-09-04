@@ -4,7 +4,7 @@ import {
 } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithCustomToken, signInAnonymously } from 'firebase/auth';
-import { ChevronRight, Sparkles, Plus, Rocket } from 'lucide-react';
+import { ChevronRight, Sparkles, Plus, Rocket, ChevronDown } from 'lucide-react';
 
 import EpicCard from './components/EpicCard';
 import SprintLane from './components/SprintLane';
@@ -353,7 +353,7 @@ const App = () => {
   };
 
   const handleTranslateToEpic = async (requirementText) => {
-    const systemPrompt = "As a PI planner, translate the following raw requirement into a concise, well-defined Epic title and description. Provide only the JSON output with 'title' and 'description' keys.";
+    const systemPrompt = "As a PI planner, translate the following raw requirement into a concise, well-defined Epic title, description, and acceptance criteria in Gherkin format. Provide only the JSON output with 'title', 'description', and 'acceptanceCriteria' keys.";
     const userQuery = `Requirement: ${requirementText}`;
     const epicData = await callGeminiApi(systemPrompt, userQuery);
 
@@ -363,7 +363,7 @@ const App = () => {
         title: epicData.title,
         description: epicData.description,
         summary: '',
-        acceptanceCriteria: '',
+        acceptanceCriteria: epicData.acceptanceCriteria,
         priority: 'Medium',
         tShirtSize: 'M'
       };
@@ -433,8 +433,8 @@ const App = () => {
     const epic = state.epics.find(e => e.id === epicId);
     if (!epic) return;
 
-    const systemPrompt = "As a PI planner, review and expand on the following epic. Add more detail, break down complex ideas, and suggest potential sub-themes. Provide only the refined description as a JSON object with a single 'refinedDescription' key.";
-    const userQuery = `Epic Title: ${epic.title}\nEpic Description: ${epic.description}`;
+    const systemPrompt = "As a PI planner, review and expand on the following epic. Add more detail, break down complex ideas, and suggest potential sub-themes. Provide only the refined description as a JSON object with 'refinedDescription' and 'refinedAcceptanceCriteria' keys.";
+    const userQuery = `Epic Title: ${epic.title}\nEpic Description: ${epic.description}\nEpic Acceptance Criteria: ${epic.acceptanceCriteria}`;
     const refinementData = await callGeminiApi(systemPrompt, userQuery);
 
     if (refinementData) {
@@ -459,6 +459,7 @@ const App = () => {
           e.id === epicId ? { 
             ...e, 
             description: refinementData.refinedDescription,
+            acceptanceCriteria: refinementData.refinedAcceptanceCriteria,
             history: [...(e.history || []), historyEntry]
           } : e
         )
@@ -933,6 +934,37 @@ const App = () => {
     }
   };
 
+  const onAddEpic = (newEpic) => {
+    setState(prevState => ({
+      ...prevState,
+      epics: [...prevState.epics, newEpic]
+    }));
+  };
+
+  const getUnassignedIssuesCount = () => {
+    const assignedIssueIds = state.sprints.flatMap(sprint => sprint.issues || []);
+    return state.issues.filter(issue => !assignedIssueIds.includes(issue.id)).length;
+  };
+
+  const [isSprintsCollapsed, setIsSprintsCollapsed] = useState(false);
+  const [isBacklogCollapsed, setIsBacklogCollapsed] = useState(false);
+  const [collapsedSprints, setCollapsedSprints] = useState({});
+
+  const toggleSprintsCollapse = () => {
+    setIsSprintsCollapsed(!isSprintsCollapsed);
+  };
+
+  const toggleBacklogCollapse = () => {
+    setIsBacklogCollapsed(!isBacklogCollapsed);
+  };
+
+  const toggleSprintCollapse = (sprintId) => {
+    setCollapsedSprints(prevState => ({
+      ...prevState,
+      [sprintId]: !prevState[sprintId]
+    }));
+  };
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
@@ -1114,29 +1146,51 @@ const App = () => {
                 </button>
               </div>
             </div>
-            {state.sprints.map(sprint => (
-              <SprintLane
-                key={sprint.id}
-                sprint={sprint}
-                issues={getIssuesForSprint(sprint.id)}
-                onUpdateIssue={handleUpdateIssue}
-                onDeleteIssue={handleDeleteIssue}
-                allSprints={state.sprints}
-              />
-            ))}
-            <div className="mt-4 p-4 border-t border-gray-200">
-              <h3 className="text-xl font-bold text-gray-700 mb-2">Backlog</h3>
-              <div className="space-y-3">
-                {getIssuesForSprint(null).map(issue => (
-                  <IssueCard
-                    key={issue.id}
-                    issue={issue}
-                    onUpdate={handleUpdateIssue}
-                    onDelete={handleDeleteIssue}
-                    allSprints={state.sprints}
-                  />
-                ))}
+            {/* Sprints Section */}
+            <div className="sprints-section">
+              
+              {state.sprints.map(sprint => (
+                <div key={sprint.id} className="sprint">
+                 
+                  {!collapsedSprints[sprint.id] && (
+                    <SprintLane
+                      sprint={sprint}
+                      issues={getIssuesForSprint(sprint.id)}
+                      onUpdateIssue={handleUpdateIssue}
+                      onDeleteIssue={handleDeleteIssue}
+                      allSprints={state.sprints}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Backlog Section */}
+            <div className="backlog-section mt-4 p-4 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <button onClick={toggleBacklogCollapse} className="collapse-button">
+                  {isBacklogCollapsed ? <ChevronRight /> : <ChevronDown />}
+                </button>
+                <h3 className="text-xl font-bold text-gray-700 mb-2">
+                  Backlog
+                  <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                    {getIssuesForSprint(null).length}
+                  </span>
+                </h3>
               </div>
+              {!isBacklogCollapsed && (
+                <div className="backlog-content space-y-3">
+                  {getIssuesForSprint(null).map(issue => (
+                    <IssueCard
+                      key={issue.id}
+                      issue={issue}
+                      onUpdate={handleUpdateIssue}
+                      onDelete={handleDeleteIssue}
+                      allSprints={state.sprints}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </main>

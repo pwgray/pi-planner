@@ -15,6 +15,7 @@ const EpicCard = ({ epic, onRefine, onGenerateIssues, onAddIssue, onUpdateEpic, 
     priority: epic.priority || 'Medium',
     tShirtSize: epic.tShirtSize || 'M'
   });
+  const [showCreateEpicForm, setShowCreateEpicForm] = useState(false);
 
   let statusColor = 'bg-gray-400';
   let statusText = 'Not Started';
@@ -80,6 +81,22 @@ const EpicCard = ({ epic, onRefine, onGenerateIssues, onAddIssue, onUpdateEpic, 
     });
     setPreviewData(null);
     setShowHistoryDialog(false);
+  };
+
+  const handleCreateEpic = () => {
+    // Logic to create a new epic
+    const newEpic = {
+      id: Date.now().toString(), // Simple unique ID
+      title: editData.title,
+      description: editData.description,
+      summary: editData.summary,
+      acceptanceCriteria: editData.acceptanceCriteria,
+      priority: editData.priority,
+      tShirtSize: editData.tShirtSize,
+      status: 'Not Started'
+    };
+    onAddEpic(newEpic);
+    setShowCreateEpicForm(false);
   };
 
   const formatTimestamp = (timestamp) => {
@@ -384,6 +401,22 @@ const EpicCard = ({ epic, onRefine, onGenerateIssues, onAddIssue, onUpdateEpic, 
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showCreateEpicForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full">
+            <h3 className="font-bold text-lg mb-2 text-blue-600">Create New Epic</h3>
+            <input type="text" placeholder="Title" value={editData.title} onChange={(e) => setEditData({...editData, title: e.target.value})} className="w-full p-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2" />
+            <textarea placeholder="Description" value={editData.description} onChange={(e) => setEditData({...editData, description: e.target.value})} className="w-full p-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2" rows="3"></textarea>
+            <button onClick={handleCreateEpic} className="w-full px-3 py-1 bg-green-500 text-white rounded-full text-xs font-semibold hover:bg-green-600 transition-colors flex items-center justify-center">
+              <Plus className="w-4 h-4 mr-1" /> Save New Epic
+            </button>
+            <button onClick={() => setShowCreateEpicForm(false)} className="w-full px-3 py-1 bg-gray-500 text-white rounded-full text-xs font-semibold hover:bg-gray-600 transition-colors flex items-center justify-center mt-2">
+              <X className="w-4 h-4 mr-1" /> Cancel
+            </button>
           </div>
         </div>
       )}
