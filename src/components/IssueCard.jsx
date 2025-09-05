@@ -58,25 +58,32 @@ const IssueCard = ({ issue, onUpdate, onDelete, allSprints }) => {
       <div className="text-xs text-gray-600 space-y-2">
         {isEditing ? (
           <div className="space-y-2">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Summary</label>
             <textarea
               value={editedIssue.summary}
               onChange={(e) => setEditedIssue({ ...editedIssue, summary: e.target.value })}
-              className="w-full text-xs p-2 border rounded resize-none"
+              className="w-full p-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+              rows="3"
               placeholder="Summary"
             />
+            <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
             <textarea
               value={editedIssue.description}
               onChange={(e) => setEditedIssue({ ...editedIssue, description: e.target.value })}
-              className="w-full text-xs p-2 border rounded resize-none"
+              className="w-full p-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  rows="3"
               placeholder="Description"
             />
+            <label className="block text-xs font-medium text-gray-700 mb-1">Acceptance Criteria</label>
             <textarea
               value={editedIssue.acceptanceCriteria}
               onChange={(e) => setEditedIssue({ ...editedIssue, acceptanceCriteria: e.target.value })}
-              className="w-full text-xs p-2 border rounded resize-none"
+              className="w-full p-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  rows="3"
               placeholder="Acceptance Criteria (Gherkin)"
             />
             <div className="flex space-x-2">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Story Points</label>
               <input
                 type="number"
                 value={editedIssue.storyPoints}
@@ -84,6 +91,7 @@ const IssueCard = ({ issue, onUpdate, onDelete, allSprints }) => {
                 className="w-1/2 text-xs p-2 border rounded"
                 placeholder="Story Points"
               />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Time Estimate</label>
               <input
                 type="number"
                 value={editedIssue.timeEstimate}
@@ -92,6 +100,7 @@ const IssueCard = ({ issue, onUpdate, onDelete, allSprints }) => {
                 placeholder="Time Estimate (hrs)"
               />
             </div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
             <select
               value={editedIssue.status}
               onChange={(e) => setEditedIssue({ ...editedIssue, status: e.target.value })}
@@ -101,6 +110,7 @@ const IssueCard = ({ issue, onUpdate, onDelete, allSprints }) => {
                 <option key={status} value={status}>{status}</option>
               ))}
             </select>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Sprint</label>
             <select
               value={editedIssue.sprint || 'backlog'}
               onChange={(e) => setEditedIssue({ ...editedIssue, sprint: e.target.value === 'backlog' ? null : e.target.value })}
